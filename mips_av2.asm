@@ -3,98 +3,102 @@
 .eqv index_sw $t2
 .eqv index $t3
 .eqv char $s0
-.eqv digit $s0
+.eqv digit $s3
 .eqv num $s2
 
 #========================================#
 .data
-    tamanho: .word 100
-    concatenarLinha: .asciiz ", "
-    unsorted_list_name: .asciiz "unsortedList.txt"
-    sorted_list_name: .asciiz "sorted_list.txt"
-    
-    sorted_list: .space 400
+    tamanho:            .word 100
+    concatenarLinha:    .asciiz ", "
+    unsorted_list_name: .asciiz "unsorted_list.txt"
+    sorted_list_name:   .asciiz "sorted_list.txt"
     .align 2
-    lista_numerica: .space 400
+    sorted_list:        .space 400
+    .align 2
+    lista_numerica:     .space 400
+    
 .text
 
 li index_sw, 0
 li index_lb, 0
 li index, 0
-#========================================#
+# ======================================== #
 
 main:
-    jal readFile                # function to load file into RAM and return to main
-    jal toInteger               # perform CHAR to INTEGER convertion and return to main
-    jal bubbleSort              # perform sort algorithm and return to main
-    li $t0, 0                   # reset $t0 (index_lb) 
-    jal writeFile               # write file and return to main
-    j exit                      # perform exit program
+    jal readFile                        # function to load file into RAM and return to main
+    jal toInteger                       # perform CHAR to INTEGER convertion and return to main
+    jal bubbleSort                      # perform sort algorithm and return to main
+    li index_lb, 0                           # reset $t0 (index_lb) 
+    jal writeFile                       # write file and return to main
+    j exit                              # perform exit program
 
-#========================================#
+# ======================================== #
 toInteger:
-    lb char, lista_numerica(index_lb)
-    add index_lb, index_lb, 1
-    beq char, '\0', store
-    beq char ',', store
-    beq char,'-', sinal
-    sub digit, char, 0x30
-    mul num, num 10
-    add num, num, digit
-    j toInteger
+    lb  char, lista_numerica(index_lb)  # load a char from file at [index]
+    beq char, '\0', store               # if equal `\0` go to store
+    beq char ',', store                 # if equals `,` go to store     
+    beq char, '-', sinal                # if equals `-` goto signald, signed -> unsigned
+    sub digit, char, 0x30               # convert string into integer by performing subtraciotn (char - 0x30)
+    mul num, num, 10                    # multiply by 10 to increment a decimal   
+    add num, num, digit                 # add num to new digit
+    add index_lb, index_lb, 1           # increment counter
+    j toInteger                         # loop toInteger
    
 init:
-    li num, 0
-    li multiplicador, 1
-    j store
+    li num, 0                           # set num to 0
+    li multiplicador, 1                 # set multiply to '1'
+    j store                             
 
 sinal:
-    li multiplicador, -1
-    j toInteger
+    li multiplicador, -1                # set multiply to '-1' 
+    j toInteger                         # 
 
 store:
-    mul num, num, multiplicador
-    sw num, sorted_list(index_sw)
-    add index_sw, index_sw, 4
-    beq char, '\0', returnMain
-    j init
+    mul num, num, multiplicador         #
+    sw num, sorted_list(index_sw)       #
+    add index_sw, index_sw, 4           #
+    beq char, '\0', end_toInteger       #
+    j init                              #
 
-returnMain:
-	jr $ra
+end_toInteger:
+	jr $ra                          # return to caller 
+
+# ============================================================== #
+#Sorting Algorithm
 
 bubbleSort:
-    la $s0, sorted_list         # load adress of lista_numerica
-    lw $s1, tamanho             # store size of list
-    li $t2, 1
-    j outerLoop
+    la $s0, sorted_list             # Load adress of lista_numerica
+    lw $s1, tamanho                 # Store size of list
+    li index_sw, 1                  # Load start number 
+    j outerLoop                     # Jump to OuterLoop
 
 outerLoop:
-    li $t2, 0
-    li $t3, 0
+    li index_sw, 0                  # Set index_sw -> 0
+    li index, 0                     # Set index to -> 0
 
 innerLoop:
-    mul $t4, $t3, 4
-    add $t5, $s0, $t4
-    addi $t6, $t5, 4
+    mul $t4, index, 4               #
+    add $t5, $s0, $t4               #
+    addi $t6, $t5, 4                #
 
-    lw $t7, 0($t5)
-    lw $t8, 0($t6)
+    lw $t7, 0($t5)                  #
+    lw $t8, 0($t6)                  #
 
-    ble $t7, $t8, jump_if_sorted
-    sw $t8, 0($t5)
-    sw $t7, 0($t6)
-    li $t2, 1
+    ble $t7, $t8, jump_if_sorted    #
+    sw $t8, 0($t5)                  #
+    sw $t7, 0($t6)                  #
+    li $t2, 1                       #
 
 jump_if_sorted:
-    addi $t3, $t3, 1
-    blt $t3, $s1, innerLoop
-    beqz $t2, end_jump
-    j outerLoop
+    addi index, index, 1            #
+    blt index, $s1, innerLoop       #
+    beqz index_sw, end_jump         #
+    j outerLoop                     #
   
-end_jump:
-	jr $ra
+end_jump:                       
+	jr $ra                          #
 
-#========================================#
+# ======================================== #
 readFile:
 
     li $v0, 13                  # open file
@@ -109,15 +113,13 @@ readFile:
     la $a1, lista_numerica      # buffer to store data
     li $a2, 400                 # buffer size
     syscall 
-    
-    li $v0, 4                   
-    move $a0, $a1
-    syscall
 
     # close file
     li $v0, 16
     move $a0, $s0
     syscall
+
+    jr $ra # return call
 	
 
 writeFile:
@@ -133,16 +135,20 @@ writeFile:
     li   $v0, 15                    # system call for write to file
     move $a0, $s6                   # file descriptor 
     la   $a1, sorted_list        # address of buffer from which to write
-    li $a2, 401                     # hardcoded buffer length
+    li $a2, 400                    # hardcoded buffer length
     syscall                         # write to file
    
+    # DEBUG PRINT - REMOVE
+    li $v0, 4                   
+    move $a0, $a1
+    syscall
+    
     # Close the file 
     li   $v0, 16                    # system call for close file
     move $a0, $s6                   # file descriptor to close
     syscall                         # close file
     
-    jr $ra
-    #faltou voltar pro programa aqui!!!
+    jr $ra # return call
 #========================================#
 # End program
 exit:
