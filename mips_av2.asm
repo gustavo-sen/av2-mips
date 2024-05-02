@@ -13,7 +13,6 @@
     unsorted_list_name: .asciiz "unsortedList.txt"
     sorted_list_name: .asciiz "sorted_list.txt"
     
-
     sorted_list: .space 400
     .align 2
     lista_numerica: .space 400
@@ -25,12 +24,12 @@ li index, 0
 #========================================#
 
 main:
-    jal readFile                # function to load file into RAM
-    jal toInteger
-    jal bubbleSort              # performe sort algorithm
+    jal readFile                # function to load file into RAM and return to main
+    jal toInteger               # perform CHAR to INTEGER convertion and return to main
+    jal bubbleSort              # perform sort algorithm and return to main
     li $t0, 0                   # reset $t0 (index_lb) 
-    jal writeFile
-    j exit
+    jal writeFile               # write file and return to main
+    j exit                      # perform exit program
 
 #========================================#
 toInteger:
