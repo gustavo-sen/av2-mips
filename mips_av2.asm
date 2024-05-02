@@ -14,6 +14,8 @@
     sorted_list_name:   .asciiz "sorted_list.txt"
 
     .align 2
+    sorted_list:     .space 400
+    .align 2
     lista_numerica:     .space 400
 .text
 
@@ -56,7 +58,7 @@ sinal:
 
 store:
     mul num, num, multiplicador         #
-    sw num, lista_numerica(index_sw)       #
+    sw num, sorted_list(index_sw)    #
     add index_sw, index_sw, 4           #
     beq char, '\0', end_toInteger       #
     j init                              #
