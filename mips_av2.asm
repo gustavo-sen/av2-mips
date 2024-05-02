@@ -46,7 +46,7 @@ toInteger:
 init:
     li num, 0
     li multiplicador, 1
-    jal store
+    j store
 
 sinal:
     li multiplicador, -1
@@ -66,8 +66,7 @@ bubbleSort:
     la $s0, sorted_list         # load adress of lista_numerica
     lw $s1, tamanho             # store size of list
     li $t2, 1
-    jal outerLoop
-    jr $ra
+    j outerLoop
 
 outerLoop:
     li $t2, 0
@@ -90,7 +89,7 @@ jump_if_sorted:
     addi $t3, $t3, 1
     blt $t3, $s1, innerLoop
     beqz $t2, end_jump
-    jal outerLoop
+    j outerLoop
   
 end_jump:
 	jr $ra
