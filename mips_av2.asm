@@ -33,21 +33,22 @@ main:
     j exit                              # perform exit program
 
 # ======================================== #
+# convert to integer
 toInteger:
     lb  char, lista_numerica(index_lb)  # load a char from file at [index]
+    add index_lb, index_lb, 1           # increment counter
     beq char, '\0', store               # if equal `\0` go to store
-    beq char ',', store                 # if equals `,` go to store     
+    beq char, ',', store                 # if equals `,` go to store     
     beq char, '-', sinal                # if equals `-` goto signald, signed -> unsigned
     sub digit, char, 0x30               # convert string into integer by performing subtraciotn (char - 0x30)
     mul num, num, 10                    # multiply by 10 to increment a decimal   
     add num, num, digit                 # add num to new digit
-    add index_lb, index_lb, 1           # increment counter
     j toInteger                         # loop toInteger
    
 init:
     li num, 0                           # set num to 0
     li multiplicador, 1                 # set multiply to '1'
-    j store                             
+    j toInteger                             
 
 sinal:
     li multiplicador, -1                # set multiply to '-1' 
@@ -99,6 +100,7 @@ end_jump:
 	jr $ra                          #
 
 # ======================================== #
+# File I/O
 readFile:
 
     li $v0, 13                  # open file
@@ -134,15 +136,10 @@ writeFile:
     # Write to file just opened
     li   $v0, 15                    # system call for write to file
     move $a0, $s6                   # file descriptor 
-    la   $a1, sorted_list        # address of buffer from which to write
-    li $a2, 400                    # hardcoded buffer length
+    la   $a1, sorted_list           # address of buffer from which to write
+    li $a2, 400                     # hardcoded buffer length
     syscall                         # write to file
-   
-    # DEBUG PRINT - REMOVE
-    li $v0, 4                   
-    move $a0, $a1
-    syscall
-    
+
     # Close the file 
     li   $v0, 16                    # system call for close file
     move $a0, $s6                   # file descriptor to close
@@ -150,6 +147,7 @@ writeFile:
     
     jr $ra # return call
 #========================================#
+
 # End program
 exit:
     li $v0, 10                      # Exit command
