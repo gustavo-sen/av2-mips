@@ -57,14 +57,18 @@ store:
     mul num, num, multiplicador
     sw num, sorted_list(index_sw)
     add index_sw, index_sw, 4
-    #nao pode voltar pra write file, tem que voltar para a linha 30(botar um registrador pra voltar pra la
-    beq char, '\0', writeFile
+    beq char, '\0', returnMain
     j init
+
+returnMain:
+	jr $ra
 
 bubbleSort:
     la $s0, sorted_list         # load adress of lista_numerica
     lw $s1, tamanho             # store size of list
     li $t2, 1
+    jal outerLoop
+    jr $ra
 
 outerLoop:
     li $t2, 0
@@ -86,11 +90,11 @@ innerLoop:
 jump_if_sorted:
     addi $t3, $t3, 1
     blt $t3, $s1, innerLoop
-    beqz $t2, breakSort
+    beqz $t2, end_jump
     jal outerLoop
-
-breakSort:
-    jr $ra
+  
+end_jump:
+	jr $ra
 
 #========================================#
 readFile:
