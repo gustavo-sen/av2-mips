@@ -1,0 +1,81 @@
+.data
+
+lista: .word 10,-158,-96,43,408,-712,58,392,-75,920,347,-11,203,835,-41,-32,629,562,638,845,264,51,96,85,805,322,-47,27,52,1,97,490,-8,-879,155,70,82,-1,260,17,44,897,-500,-737,114,250,2,131,46,-55,196,306,-76,789,237,784,506,-891,93,59,81,96,-726,-6,-49,-404,583,37,595,-274,75,46,590,-301,97,528,205,326,-309,-283,441,67,27,14,11,290,-45,-69,44,941,64,960,697,26,43,742,3,-741,99,21      
+message: .asciiz "Lista Ordenada: "            
+tamanho: .word 100
+separador: .ascii ", "
+
+.text
+main:
+
+#iniciaizando variaveis
+    la 		$s7, lista                      #endereco dos numeros
+
+    li	 	$s0, 0                          #counter loop 1
+    la		$s6, tamanho
+    lw		$s6, 0($s6)
+    sub		$s6, $s6, 1                    #comecando no 0 e indo ate n-1
+
+    li 		$s1, 0                         #counter do loop 2
+
+    li		$t3, 0  
+    la		$t4, tamanho
+    lw		$t4, 0($t4			#counter do print
+
+    li		$v0, 4                         #print da mensagem
+    la	 	$a0, message
+    syscall
+#==========================================================================#
+bubbleSort:
+    sll 	$t7, $s1, 2                    #multiplica s1 por 2 e bota em t7
+    add		$t7, $s7, $t7                 	#adiciona os enderecos a t7
+
+    lw		$t0, 0($t7)                 	 #carrega primeiro numero {n}
+    lw 		$t1, 4($t7)                    #carrega segundo numero {n+1}
+
+    slt 	$t2, $t0, $t1                	#se t0 < t1
+    bne 	$t2, $zero, increment
+
+    sw 		$t1, 0($t7)                    #troca os numeros
+    sw 		$t0, 4($t7)
+
+increment:
+
+    addi 	$s1, $s1, 1                	#incrementa t1
+    sub 	$s5, $s6, $s0                 	#subtrai s0  de s6 e armazena
+
+    bne  	$s1, $s5, bubbleSort       	#se o contador nao for igual ao tamanho -1 ele continua
+    addi 	$s0, $s0, 1                 	#incrementa o s0 se for falso
+    li 		$s1, 0                     	#reseta s1
+
+    bne 	$s0, $s6, bubbleSort     	#volta o loop pra ordenar novamente os numeros
+
+
+#===============================================#
+print:
+    sub 	$k0, $t4, 1
+    
+    beq 	$t3, $t4, final                #se t3 for igual ao tamanho
+numFinal:
+    lw 		$t5, 0($s7)                    #carrega o numero
+
+    li 		$v0, 1                    	#imprime o numero
+    move 	$a0, $t5
+    syscall
+    beq 	$t3, $k0, final  		# se for o penultimo numero ele pula a virgula e finaliza o programa
+
+    lw 		$a0, separador                 #imprimi o neparador
+    li 		$v0, 11
+    syscall
+
+    addi 	$s7, $s7, 4                	#incrementa endereco da word na memoria
+    addi 	$t3, $t3, 1                	#incrementa o contador
+    beq 	$t3, $k0, numFinal
+
+    j print
+
+
+#==============================================#
+final:
+    li 		$v0, 10                    	#acaba programa
+    syscall
