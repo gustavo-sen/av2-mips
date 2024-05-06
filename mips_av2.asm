@@ -8,15 +8,24 @@
 
 # ========================================= #
 .data
-    tamanho:            .word 100
+
+message: .asciiz "Lista Ordenada: "            
+tamanho: .word 100
+separador: .ascii ", "
+
+
+
+    
     concatenarLinha:    .asciiz ", "
-    unsorted_list_name: .asciiz "unsorted_list.txt"
-    sorted_list_name:   .asciiz "sorted_list.txt"
+    unsorted_list_name: .asciiz "C:\\Users\\migue\\Desktop\\unsorted_list.txt"
+    sorted_list_name:   .asciiz "C:\\Users\\migue\\Desktop\\sorted_list.txt"
 
     .align 2
     sorted_list:     .space 400
     .align 2
     lista_numerica:     .space 400
+    .align 2
+    writeList: .space 400
 .text
 
 li index_sw, 0
@@ -26,11 +35,17 @@ li index, 0
 
 main:
     jal readFile                        # function to load file into RAM and return to main
-    li index_lb, 0                      # reset $t0 (index_lb) 
+   		li index_lb, 0                      # reset $t0 (index_lb) 
     jal toInteger                       # perform CHAR to INTEGER convertion and return to main
-    li index_lb, 0                      # reset $t0 (index_lb) 
-
-    jal bubbleSort                      # perform sort algorithm and return to main
+    		li index_lb, 0                      # reset $t0 (index_lb)       
+       
+    jal Sort  
+     
+    escreve:                   # perform sort algorithm and return to main
+		li index_sw, 0
+		li index_lb, 0
+		li index, 0
+    jal toChar
     jal writeFile                       # write file and return to main
     j exit                              # perform exit program
 
@@ -66,40 +81,59 @@ store:
 end_toInteger:
 	jr $ra                              # return to caller 
 
+# ======================================== #
+# convert to char
+toChar:	
+jr $ra
+# ======================================== #
+return:
+	jr $ra                              # return to caller
 # ============================================================== #
 #Sorting Algorithm
+Sort:
+la 		$s7, sorted_list                      #endereco dos numeros
+
+li	 	$s0, 0                          #counter loop 1
+la		$s6, tamanho
+lw		$s6, 0($s6)
+sub		$s6, $s6, 1                    #comecando no 0 e indo ate n-1
+
+li 		$s1, 0                         #counter do loop 2
+
+li		$t3, 0  
+la		$t4, tamanho
+lw		$t4, 0($t4)			#counter do print
+
+li		$v0, 4                         #print da mensagem
+la	 	$a0, message
+syscall
+      
 
 bubbleSort:
-    la $s0, lista_numerica              # Load adress of lista_numerica
-    lw $s1, tamanho                     # Store size of list
-    li index_sw, 1                      # Load start number 
-    j outerLoop                         # Jump to OuterLoop
+    sll 	$t7, $s1, 2                    #multiplica s1 por 2 e bota em t7
+    add		$t7, $s7, $t7                 	#adiciona os enderecos a t7
 
-outerLoop:
-    li index_sw, 0                      # Set index_sw -> 0
-    li index, 0                         # Set index to -> 0
+    lw		$t0, 0($t7)                 	 #carrega primeiro numero {n}
+    lw 		$t1, 4($t7)                    #carrega segundo numero {n+1}
 
-innerLoop:
-    mul $t4, index, 4                   #
-    add $t5, $s0, $t4                   #
-    addi $t6, $t5, 4                    #
+    slt 	$t2, $t0, $t1                	#se t0 < t1
+    bne 	$t2, $zero, increment
 
-    lw $t7, 0($t5)                      #
-    lw $t8, 0($t6)                      #
+    sw 		$t1, 0($t7)                    #troca os numeros
+    sw 		$t0, 4($t7)
 
-    ble $t7, $t8, jump_if_sorted        #
-    sw $t8, 0($t5)                      #
-    sw $t7, 0($t6)                      #
-    li $t2, 1                           #
+increment:
 
-jump_if_sorted:
-    addi index, index, 1                #
-    blt  index, $s1, innerLoop           #
-    beqz index_sw, end_jump             #
-    j outerLoop                         #
-  
-end_jump:                       
-	jr $ra                              # return call
+    addi 	$s1, $s1, 1                	#incrementa t1
+    sub 	$s5, $s6, $s0                 	#subtrai s0  de s6 e armazena
+
+    bne  	$s1, $s5, bubbleSort       	#se o contador nao for igual ao tamanho -1 ele continua
+    addi 	$s0, $s0, 1                 	#incrementa o s0 se for falso
+    li 		$s1, 0                     	#reseta s1
+
+    bne 	$s0, $s6, bubbleSort     	#volta o loop pra ordenar novamente os numeros
+
+jr $ra
 
 # ======================================== #
 # File I/O
@@ -138,7 +172,7 @@ writeFile:
     # Write to file just opened
     li   $v0, 15                        # system call for write to file
     move $a0, $s6                       # file descriptor 
-    la   $a1, lista_numerica            # address of buffer from which to write
+    la   $a1, sorted_list           # address of buffer from which to write
     li $a2, 400                         # hardcoded buffer length
     syscall                             # write to file
 
@@ -146,11 +180,11 @@ writeFile:
     li   $v0, 16                        # system call for close file
     move $a0, $s6                       # file descriptor to close
     syscall                             # close file
-    
+
     jr $ra                              # return call
 #========================================#
 
-# End program
+#End program
 exit:
     li $v0, 10                          # Exit command
-    syscall         
+    syscall
