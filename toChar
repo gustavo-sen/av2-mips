@@ -41,12 +41,12 @@ exitloopN:
 #tem que salvar o "-" e  incrementar o index de store
 exitloop:
 j toChar
+beqz $s3, toChar #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
 lw  $s3, numero(index_num)
 sw $s3, numToChar(index_sto)
 sub index_num, index_num, 1
 addi index_sto, index_sto, 4
 #salva a virgula
-beqz $s3, toChar
 j exitloop
 
 negativo: #caso o numero seja negativo ele multiplica por 2
