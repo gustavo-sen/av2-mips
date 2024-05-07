@@ -4,13 +4,15 @@
 .eqv divisor $a1
 .eqv index_sto $t9
 .data
-numeros: .word -256,-25,0,101
+numeros: .word 691,-86,-617,703,63,8,75,-65,-10,99,-895,9,39,87,23,8,45,50,865,55,18,698,98,64,613,360,4,83,-353,408,711,-13,353,419,57,-396,26,34,-40,343,21,170,27,13,37,46,-71,420,167,60,50,675,-898,349,937,21,140,737,-635,99,720,-72,24,245,601,656,48,256,625,530,-19,80,51,-896,88,150,326,90,991,39,49,312,386,0,-900,455,91,38,475,-880,76,774,78,876,48,827,309,52,-444,73
 virgula: .ascii ", "
 .align 2
-numToChar: .space 200
+menos: .ascii "-"
+.align 2
+numToChar: .space 400
 .align 2
 numero: .space 4
-tam: .word 4
+tam: .word 100
 
 .text
 #inicializa
@@ -41,17 +43,31 @@ j loop
 
 exitloopN:
 #tem que salvar o "-" e  incrementar o index de store
-
+lw $s4, menos
+sb $s4, numToChar(index_sto)
+addi index_sto, index_sto, 1
 
 exitloop:
 lw  $s3, numero(index_num)
-beq $s3, 0, toChar #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
+beq $s3, 0, separador #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
 
-sw $s3, numToChar(index_sto)
+sb $s3, numToChar(index_sto)
 sub index_num, index_num, 4
-addi index_sto, index_sto, 4
+addi index_sto, index_sto, 1
+
+
+
 #salva a virgula
 j exitloop
+
+
+separador:
+beq $t0, $t1, fin
+lw $s4, virgula
+sb $s4, numToChar(index_sto)
+addi index_sto, index_sto, 1
+j toChar
+
 
 negativo: #caso o numero seja negativo ele multiplica por 2
 li divisor , 10
