@@ -4,9 +4,11 @@
 .eqv divisor $a1
 .eqv index_sto $t9
 .data
-numeros: .word -256,-25,101,0
+numeros: .word -256,-25,0,101
 virgula: .ascii ", "
-numToChar: .space 50
+.align 2
+numToChar: .space 200
+.align 2
 numero: .space 4
 tam: .word 4
 
@@ -14,7 +16,7 @@ tam: .word 4
 #inicializa
 li $t0 , 0 
 lw $t1 , tam
-sub $t1 , $t1 , 1
+#sub $t1 , $t1 , 1
 
 toChar:
 beq $t0, $t1, fin
@@ -31,7 +33,7 @@ loop:
  div $t3, divisor
  mflo $t3
  mfhi digito
- addi digito, digito, 30 #adiciona 30 para tabela ascii
+ addi digito, digito, 0x30 #adiciona 30 para tabela ascii
  sw digito, numero(index_num)
  beqz $t3, exitloop #exitloop sem sinal negativo
  addi index_num, index_num, 4
@@ -39,12 +41,14 @@ j loop
 
 exitloopN:
 #tem que salvar o "-" e  incrementar o index de store
+
+
 exitloop:
-j toChar
-beqz $s3, toChar #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
 lw  $s3, numero(index_num)
+beq $s3, 0, toChar #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
+
 sw $s3, numToChar(index_sto)
-sub index_num, index_num, 1
+sub index_num, index_num, 4
 addi index_sto, index_sto, 4
 #salva a virgula
 j exitloop
@@ -59,7 +63,7 @@ loopN:
  mflo $t3
  mfhi digito
  mul digito, digito, -1
- addi digito, digito, 30 #adiciona 30 para tabela ascii
+ addi digito, digito, 0x30 #adiciona 30 para tabela ascii
  sw digito, numero(index_num)
  beqz $t3, exitloopN
  addi index_num, index_num, 4
