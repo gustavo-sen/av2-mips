@@ -6,10 +6,23 @@
 .eqv num $s2
 .eqv digit $s3
 
+.eqv index_num $s1
+.eqv digito $s2
+.eqv index_lw $a0
+.eqv divisor $a1
+.eqv index_sto $t9
+
 # ========================================= #
 .data
-    tamanho:            .word 100
-    concatenarLinha:    .asciiz ", "
+.align 2
+    virgula: .ascii ", "
+.align 2
+    menos: .ascii "-"
+.align 2
+    numToChar: .space 400
+.align 2
+    numero: .space 4
+    tamanho: .word 100
     unsorted_list_name: .asciiz "unsorted_list.txt"
     sorted_list_name:   .asciiz "sorted_list.txt"
 
@@ -17,6 +30,8 @@
     sorted_list:     .space 400
     .align 2
     lista_numerica:     .space 400
+    .align 2
+    writeList:      .space 400
 .text
 
 li index_sw, 0
@@ -28,9 +43,15 @@ main:
     jal readFile                        # function to load file into RAM and return to main
     li index_lb, 0                      # reset $t0 (index_lb) 
     jal toInteger                       # perform CHAR to INTEGER convertion and return to main
-    li index_lb, 0                      # reset $t0 (index_lb) 
-
-    jal bubbleSort                      # perform sort algorithm and return to main
+    li index_lb, 0                      # reset $t0 (index_lb)       
+       
+    jal Sort  
+     
+    escreve:                   # perform sort algorithm and return to main
+    li index_sw, 0
+    li index_lb, 0
+    li index, 0
+    jal initToChar
     jal writeFile                       # write file and return to main
     j exit                              # perform exit program
 
@@ -66,40 +87,121 @@ store:
 end_toInteger:
 	jr $ra                              # return to caller 
 
+# ======================================== #
+# convert to char
+initToChar:
+# inicializa
+    li $t0 , 0 
+    lw $t1 , tamanho
+    li index_lw, 0
+
+toChar:
+    beq $t0, $t1, return
+    addi $t0, $t0, 1
+    li divisor , 10
+    lw $t3, sorted_list(index_lw)
+    addi index_lw, index_lw, 4
+    li index_num, 0
+    blt $t3, 0, negativo
+
+# loop numero positivo
+loop:	
+    # vai fazer o loop do numero, se achar que o digito e  /0 vai pegar os registradores e armazenar em num to char
+    div $t3, divisor
+    mflo $t3
+    mfhi digito
+    addi digito, digito, 0x30 #adiciona 30 para tabela ascii
+    sw digito, numero(index_num)
+    beqz $t3, exitloop #exitloop sem sinal negativo
+    addi index_num, index_num, 4
+    j loop
+
+negativo: # caso o numero seja negativo ele multiplica por 2
+    li divisor , 10
+
+loopN:
+# vai fazer o loop do numero, se achar que o digito e  /0 vai pegar os registradores e armazenar em num to char
+    div $t3, divisor
+    mflo $t3
+    mfhi digito
+    mul digito, digito, -1
+    addi digito, digito, 0x30 #adiciona 30 para tabela ascii
+    sw digito, numero(index_num)
+    beqz $t3, exitloopN
+    addi index_num, index_num, 4
+    j loopN
+
+exitloopN:
+# tem que salvar o "-" e  incrementar o index de store
+    lw $s4, menos
+    sb $s4, numToChar(index_sto)
+    addi index_sto, index_sto, 1
+
+exitloop:
+    lw  $s3, numero(index_num)
+    beq $s3, 0, separador #caso nao esteja mandando  o numero completo, joga isso aqui pro fianla 
+
+    sb $s3, numToChar(index_sto)
+    sub index_num, index_num, 4
+    addi index_sto, index_sto, 1
+
+# salva a virgula
+j exitloop
+
+separador:
+beq $t0, $t1, return
+lw $s4, virgula
+sb $s4, numToChar(index_sto)
+addi index_sto, index_sto, 1
+j toChar
+jr $ra
+
+# ============================================================== #
+return:
+	jr $ra                              # return to caller
 # ============================================================== #
 #Sorting Algorithm
+Sort:
+la 		$s7, sorted_list                # endereco dos numeros
+
+li	 	$s0, 0                          # counter loop 1
+la		$s6, tamanho
+lw		$s6, 0($s6)
+sub		$s6, $s6, 1                     # comecando no 0 e indo ate n-1
+
+li 		$s1, 0                          # counter do loop 2
+
+li		$t3, 0  
+la		$t4, tamanho
+lw		$t4, 0($t4)			            # counter do print
+
+
 
 bubbleSort:
-    la $s0, lista_numerica              # Load adress of lista_numerica
-    lw $s1, tamanho                     # Store size of list
-    li index_sw, 1                      # Load start number 
-    j outerLoop                         # Jump to OuterLoop
+    sll 	$t7, $s1, 2                 # multiplica s1 por 2 e bota em t7
+    add		$t7, $s7, $t7               # adiciona os enderecos a t7
 
-outerLoop:
-    li index_sw, 0                      # Set index_sw -> 0
-    li index, 0                         # Set index to -> 0
+    lw		$t0, 0($t7)                 # carrega primeiro numero {n}
+    lw 		$t1, 4($t7)                 # carrega segundo numero {n+1}
 
-innerLoop:
-    mul $t4, index, 4                   #
-    add $t5, $s0, $t4                   #
-    addi $t6, $t5, 4                    #
+    slt 	$t2, $t0, $t1               # se t0 < t1
+    bne 	$t2, $zero, increment
 
-    lw $t7, 0($t5)                      #
-    lw $t8, 0($t6)                      #
+    sw 		$t1, 0($t7)                 # troca os numeros
+    sw 		$t0, 4($t7)
 
-    ble $t7, $t8, jump_if_sorted        #
-    sw $t8, 0($t5)                      #
-    sw $t7, 0($t6)                      #
-    li $t2, 1                           #
+increment:
 
-jump_if_sorted:
-    addi index, index, 1                #
-    blt  index, $s1, innerLoop           #
-    beqz index_sw, end_jump             #
-    j outerLoop                         #
-  
-end_jump:                       
-	jr $ra                              # return call
+    addi 	$s1, $s1, 1                	# incrementa t1
+    sub 	$s5, $s6, $s0               # subtrai s0  de s6 e armazena
+
+    bne  	$s1, $s5, bubbleSort       	# se o contador nao for igual ao tamanho -1 ele continua
+    addi 	$s0, $s0, 1                 # incrementa o s0 se for falso
+    li 		$s1, 0                     	# reseta s1
+
+    bne 	$s0, $s6, bubbleSort     	# volta o loop pra ordenar novamente os numeros
+
+jr $ra
 
 # ======================================== #
 # File I/O
@@ -138,7 +240,7 @@ writeFile:
     # Write to file just opened
     li   $v0, 15                        # system call for write to file
     move $a0, $s6                       # file descriptor 
-    la   $a1, lista_numerica            # address of buffer from which to write
+    la   $a1, numToChar                 # address of buffer from which to write
     li $a2, 400                         # hardcoded buffer length
     syscall                             # write to file
 
@@ -146,11 +248,11 @@ writeFile:
     li   $v0, 16                        # system call for close file
     move $a0, $s6                       # file descriptor to close
     syscall                             # close file
-    
+
     jr $ra                              # return call
 #========================================#
 
-# End program
+#End program
 exit:
     li $v0, 10                          # Exit command
-    syscall         
+    syscall
