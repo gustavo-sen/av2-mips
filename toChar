@@ -13,6 +13,7 @@ numToChar: .space 400
 .align 2
 numero: .space 4
 tam: .word 100
+sorted_list_name:   .asciiz "C:\\Users\\migue\\Desktop\\sorted_list.txt"
 
 .text
 #inicializa
@@ -41,6 +42,21 @@ loop:
  addi index_num, index_num, 4
 j loop
 
+negativo: #caso o numero seja negativo ele multiplica por 2
+li divisor , 10
+loopN:
+
+
+		#vai fazer o loop do numero, se achar que o digito e  /0 vai pegar os registradores e armazenar em num to char
+ div $t3, divisor
+ mflo $t3
+ mfhi digito
+ mul digito, digito, -1
+ addi digito, digito, 0x30 #adiciona 30 para tabela ascii
+ sw digito, numero(index_num)
+ beqz $t3, exitloopN
+ addi index_num, index_num, 4
+j loopN
 exitloopN:
 #tem que salvar o "-" e  incrementar o index de store
 lw $s4, menos
@@ -69,21 +85,8 @@ addi index_sto, index_sto, 1
 j toChar
 
 
-negativo: #caso o numero seja negativo ele multiplica por 2
-li divisor , 10
-loopN:
 
-
-		#vai fazer o loop do numero, se achar que o digito e  /0 vai pegar os registradores e armazenar em num to char
- div $t3, divisor
- mflo $t3
- mfhi digito
- mul digito, digito, -1
- addi digito, digito, 0x30 #adiciona 30 para tabela ascii
- sw digito, numero(index_num)
- beqz $t3, exitloopN
- addi index_num, index_num, 4
-j loopN
 fin:
-li $v0, 10
-syscall
+
+    li $v0, 10                          # Exit command
+    syscall
